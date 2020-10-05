@@ -33,30 +33,40 @@ if DATASET == "mnist_d":
     IW = 28
     IZ = 1
     IS = 784
+    EPOCH_COUNT = 5
+    DROP_RATE = 0.08
 elif DATASET == "mnist_f":
     NUM_CLASSES = 10
     IH = 28
     IW = 28
     IZ = 1
     IS = 784
+    EPOCH_COUNT = 5
+    DROP_RATE = 0.08
 elif DATASET == "cifar_10":
     NUM_CLASSES = 10
     IH = 32
     IW = 32
     IZ = 3
     IS = IH * IW * IZ
+    EPOCH_COUNT = 5
+    DROP_RATE = 0.08
 elif DATASET == "cifar_100_f":
     NUM_CLASSES = 100
     IH = 32
     IW = 32
     IZ = 3
     IS = IH * IW * IZ
+    EPOCH_COUNT = 5
+    DROP_RATE = 0.08
 elif DATASET == "cifar_100_c":
     NUM_CLASSES = 20
     IH = 32
     IW = 32
     IZ = 3
     IS = IH * IW * IZ
+    EPOCH_COUNT = 5
+    DROP_RATE = 0.08
 
 
 #=========================<Classifier Functions>================================
@@ -73,8 +83,8 @@ def guesserClassifier(xTest):
 def buildTFNeuralNet(x, y, eps = 6):
     model = keras.models.Sequential([
         layers.Flatten(),
-        layers.Dense(1024, activation=tf.nn.relu),
-        layers.Dense(512, activation=tf.nn.relu),
+        layers.Dense(4096, activation=tf.nn.relu),
+        layers.Dense(2048, activation=tf.nn.relu),
         layers.Dense(NUM_CLASSES, activation=tf.nn.softmax)
     ])
     model.compile(
@@ -112,20 +122,19 @@ def create_mnist_f_model(dropout, drop_rate):
     model = keras.models.Sequential()
     input_shape = (IH, IW, IZ)
     model.add(layers.Conv2D(
-        32,
+        48,
         kernel_size=(2, 2),
         activation=relu,
         input_shape=input_shape
     ))
     model.add(layers.Conv2D(
-        64,
+        96,
         kernel_size=(2, 2),
-        activation=relu,
-        input_shape=input_shape
+        activation=relu
     ))
     model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(layers.Conv2D(
-        128,
+        144,
         kernel_size=(2, 2),
         activation=relu
     ))
@@ -137,7 +146,6 @@ def create_mnist_f_model(dropout, drop_rate):
         kernel_size=(2, 2),
         activation=relu
     ))
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(layers.Conv2D(
         512,
         kernel_size=(2, 2),
@@ -149,6 +157,7 @@ def create_mnist_f_model(dropout, drop_rate):
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
+    model.summary()
     return model
 
 def create_cifar_100_f_model(dropout, drop_rate):
@@ -250,7 +259,7 @@ def trainModel(data):
         return buildTFNeuralNet(xTrain, yTrain)
     elif ALGORITHM == "tf_conv":
         print("Building and training TF_CNN.")
-        return buildTFConvNet(xTrain, yTrain, eps=5, dropRate=0.08)
+        return buildTFConvNet(xTrain, yTrain, eps=EPOCH_COUNT, dropRate=DROP_RATE)
     else:
         raise ValueError("Algorithm not recognized.")
 
