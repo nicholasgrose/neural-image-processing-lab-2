@@ -2,8 +2,11 @@ import os
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import layers
 from tensorflow.keras.utils import to_categorical
 import random
+from tensorflow.python.keras import activations
+from tensorflow.python.keras.activations import relu
 
 
 random.seed(1618)
@@ -14,15 +17,15 @@ tf.random.set_seed(1618)
 #tf.logging.set_verbosity(tf.logging.ERROR)   # Uncomment for TF1.
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-ALGORITHM = "guesser"
+# ALGORITHM = "guesser"
 #ALGORITHM = "tf_net"
-#ALGORITHM = "tf_conv"
+ALGORITHM = "tf_conv"
 
-DATASET = "mnist_d"
-#DATASET = "mnist_f"
-#DATASET = "cifar_10"
-#DATASET = "cifar_100_f"
-#DATASET = "cifar_100_c"
+# DATASET = "mnist_d"
+DATASET = "mnist_f"
+# DATASET = "cifar_10"
+# DATASET = "cifar_100_f"
+# DATASET = "cifar_100_c"
 
 if DATASET == "mnist_d":
     NUM_CLASSES = 10
@@ -37,11 +40,23 @@ elif DATASET == "mnist_f":
     IZ = 1
     IS = 784
 elif DATASET == "cifar_10":
-    pass                                 # TODO: Add this case.
+    NUM_CLASSES = 10
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = IH * IW * IZ
 elif DATASET == "cifar_100_f":
-    pass                                 # TODO: Add this case.
+    NUM_CLASSES = 100
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = IH * IW * IZ
 elif DATASET == "cifar_100_c":
-    pass                                 # TODO: Add this case.
+    NUM_CLASSES = 20
+    IH = 32
+    IW = 32
+    IZ = 3
+    IS = IH * IW * IZ
 
 
 #=========================<Classifier Functions>================================
@@ -56,29 +71,147 @@ def guesserClassifier(xTest):
 
 
 def buildTFNeuralNet(x, y, eps = 6):
-    pass        #TODO: Implement a standard ANN here.
-    return None
+    model = keras.models.Sequential([
+        layers.Flatten(),
+        layers.Dense(1024, activation=tf.nn.relu),
+        layers.Dense(512, activation=tf.nn.relu),
+        layers.Dense(NUM_CLASSES, activation=tf.nn.softmax)
+    ])
+    model.compile(
+        optimizer=keras.optimizers.Adam(),
+        loss=keras.losses.categorical_crossentropy,
+        metrics=['accuracy']
+    )
+    model.fit(x, y, epochs=eps)
+    return model
 
 
 def buildTFConvNet(x, y, eps = 10, dropout = True, dropRate = 0.2):
-    pass        #TODO: Implement a CNN here. dropout option is required.
-    return None
+    if DATASET == "mnist_d":
+        model = create_mnist_f_model(dropout, dropRate)
+    elif DATASET == "mnist_f":
+        model = create_mnist_f_model(dropout, dropRate)
+    elif DATASET == "cifar_10":
+        model = create_cifar_100_f_model(dropout, dropRate)
+    elif DATASET == "cifar_100_f":
+        model = create_cifar_100_f_model(dropout, dropRate)
+    elif DATASET == "cifar_100_c":
+        model = create_cifar_100_f_model(dropout, dropRate)
+    else:
+        raise ValueError("Dataset not recognized.")
+
+    model.compile(
+        optimizer=keras.optimizers.Adam(),
+        loss=keras.losses.categorical_crossentropy,
+        metrics=['accuracy']
+    )
+    model.fit(x, y, epochs=eps)
+    return model
+
+def create_mnist_f_model(dropout, drop_rate):
+    model = keras.models.Sequential()
+    input_shape = (IH, IW, IZ)
+    model.add(layers.Conv2D(
+        32,
+        kernel_size=(2, 2),
+        activation=relu,
+        input_shape=input_shape
+    ))
+    model.add(layers.Conv2D(
+        64,
+        kernel_size=(2, 2),
+        activation=relu,
+        input_shape=input_shape
+    ))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        128,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        256,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        512,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(512, activation=relu))
+    model.add(layers.Dense(512, activation=relu))
+    model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
+    return model
+
+def create_cifar_100_f_model(dropout, drop_rate):
+    model = keras.models.Sequential()
+    input_shape = (IH, IW, IZ)
+    model.add(layers.Conv2D(
+        32,
+        kernel_size=(2, 2),
+        activation=relu,
+        input_shape=input_shape
+    ))
+    model.add(layers.Conv2D(
+        64,
+        kernel_size=(2, 2),
+        activation=relu,
+        input_shape=input_shape
+    ))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        128,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        256,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    model.add(layers.Conv2D(
+        512,
+        kernel_size=(2, 2),
+        activation=relu
+    ))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(512, activation=relu))
+    model.add(layers.Dense(512, activation=relu))
+    model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
+    return model
 
 #=========================<Pipeline Functions>==================================
 
 def getRawData():
     if DATASET == "mnist_d":
-        mnist = tf.keras.datasets.mnist
+        mnist = keras.datasets.mnist
         (xTrain, yTrain), (xTest, yTest) = mnist.load_data()
     elif DATASET == "mnist_f":
-        mnist = tf.keras.datasets.fashion_mnist
+        mnist = keras.datasets.fashion_mnist
         (xTrain, yTrain), (xTest, yTest) = mnist.load_data()
     elif DATASET == "cifar_10":
-        pass      # TODO: Add this case.
+        cifar = keras.datasets.cifar10
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data()
     elif DATASET == "cifar_100_f":
-        pass      # TODO: Add this case.
+        cifar = keras.datasets.cifar100
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data(label_mode='fine')
     elif DATASET == "cifar_100_c":
-        pass      # TODO: Add this case.
+        cifar = keras.datasets.cifar100
+        (xTrain, yTrain), (xTest, yTest) = cifar.load_data(label_mode='coarse')
     else:
         raise ValueError("Dataset not recognized.")
     print("Dataset: %s" % DATASET)
@@ -117,7 +250,7 @@ def trainModel(data):
         return buildTFNeuralNet(xTrain, yTrain)
     elif ALGORITHM == "tf_conv":
         print("Building and training TF_CNN.")
-        return buildTFConvNet(xTrain, yTrain)
+        return buildTFConvNet(xTrain, yTrain, eps=5, dropRate=0.08)
     else:
         raise ValueError("Algorithm not recognized.")
 
