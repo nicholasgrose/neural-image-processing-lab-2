@@ -123,7 +123,7 @@ def create_mnist_f_model(dropout, drop_rate):
     input_shape = (IH, IW, IZ)
     model.add(layers.ZeroPadding2D(padding=(1,1), input_shape=input_shape))
     model.add(layers.Conv2D(
-        16,
+        24,
         kernel_size=(2, 2),
         activation=relu
     ))
