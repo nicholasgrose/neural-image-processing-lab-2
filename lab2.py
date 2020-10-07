@@ -22,8 +22,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 #ALGORITHM = "tf_net"
 ALGORITHM = "tf_conv"
 
-# DATASET = "mnist_d"
-DATASET = "mnist_f"
+DATASET = "mnist_d"
+# DATASET = "mnist_f"
 # DATASET = "cifar_10"
 # DATASET = "cifar_100_f"
 # DATASET = "cifar_100_c"
@@ -34,8 +34,8 @@ if DATASET == "mnist_d":
     IW = 28
     IZ = 1
     IS = 784
-    EPOCH_COUNT = 5
-    DROP_RATE = 0.08
+    EPOCH_COUNT = 8
+    DROP_RATE = 0.2
     RANDOM_CROPS = False
 elif DATASET == "mnist_f":
     NUM_CLASSES = 10
@@ -150,7 +150,6 @@ def create_mnist_f_model(dropout, drop_rate):
         model.add(layers.Dropout(drop_rate))
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
-    model.summary()
     model.compile(
         optimizer=keras.optimizers.Adam(),
         loss=keras.losses.categorical_crossentropy,
