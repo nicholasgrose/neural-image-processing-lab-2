@@ -5,9 +5,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from tensorflow.keras.utils import to_categorical
 import random
-from tensorflow.python.keras import activations
 from tensorflow.python.keras.activations import relu
-from tensorflow.python.keras.layers.convolutional import DepthwiseConv2D
+import matplotlib
 
 
 random.seed(1618)
@@ -19,8 +18,8 @@ tf.random.set_seed(1618)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 # ALGORITHM = "guesser"
-#ALGORITHM = "tf_net"
-ALGORITHM = "tf_conv"
+ALGORITHM = "tf_net"
+# ALGORITHM = "tf_conv"
 
 DATASET = "mnist_d"
 # DATASET = "mnist_f"
@@ -89,8 +88,8 @@ def guesserClassifier(xTest):
 def buildTFNeuralNet(x, y, eps = 6):
     model = keras.models.Sequential([
         layers.Flatten(),
-        layers.Dense(4096, activation=tf.nn.relu),
         layers.Dense(2048, activation=tf.nn.relu),
+        layers.Dense(1024, activation=tf.nn.relu),
         layers.Dense(NUM_CLASSES, activation=tf.nn.softmax)
     ])
     model.compile(
@@ -132,7 +131,7 @@ def create_mnist_f_model(dropout, drop_rate):
     model.add(layers.SeparableConv2D(
         36,
         kernel_size=(2, 2),
-        activation=relu,
+        activation=relu
     ))
     model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     if dropout:
