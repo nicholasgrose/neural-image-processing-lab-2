@@ -7,6 +7,7 @@ from tensorflow.keras.utils import to_categorical
 import random
 from tensorflow.python.keras import activations
 from tensorflow.python.keras.activations import relu
+from tensorflow.python.keras.layers.convolutional import DepthwiseConv2D
 
 
 random.seed(1618)
@@ -35,14 +36,16 @@ if DATASET == "mnist_d":
     IS = 784
     EPOCH_COUNT = 5
     DROP_RATE = 0.08
+    RANDOM_CROPS = False
 elif DATASET == "mnist_f":
     NUM_CLASSES = 10
     IH = 28
     IW = 28
     IZ = 1
     IS = 784
-    EPOCH_COUNT = 5
-    DROP_RATE = 0.08
+    EPOCH_COUNT = 8
+    DROP_RATE = 0.25
+    RANDOM_CROPS = False
 elif DATASET == "cifar_10":
     NUM_CLASSES = 10
     IH = 32
@@ -51,6 +54,7 @@ elif DATASET == "cifar_10":
     IS = IH * IW * IZ
     EPOCH_COUNT = 5
     DROP_RATE = 0.08
+    RANDOM_CROPS = False
 elif DATASET == "cifar_100_f":
     NUM_CLASSES = 100
     IH = 32
@@ -59,6 +63,7 @@ elif DATASET == "cifar_100_f":
     IS = IH * IW * IZ
     EPOCH_COUNT = 5
     DROP_RATE = 0.08
+    RANDOM_CROPS = False
 elif DATASET == "cifar_100_c":
     NUM_CLASSES = 20
     IH = 32
@@ -67,6 +72,7 @@ elif DATASET == "cifar_100_c":
     IS = IH * IW * IZ
     EPOCH_COUNT = 5
     DROP_RATE = 0.08
+    RANDOM_CROPS = False
 
 
 #=========================<Classifier Functions>================================
@@ -109,55 +115,47 @@ def buildTFConvNet(x, y, eps = 10, dropout = True, dropRate = 0.2):
         model = create_cifar_100_f_model(dropout, dropRate)
     else:
         raise ValueError("Dataset not recognized.")
-
-    model.compile(
-        optimizer=keras.optimizers.Adam(),
-        loss=keras.losses.categorical_crossentropy,
-        metrics=['accuracy']
-    )
     model.fit(x, y, epochs=eps)
     return model
 
 def create_mnist_f_model(dropout, drop_rate):
     model = keras.models.Sequential()
     input_shape = (IH, IW, IZ)
+    model.add(layers.ZeroPadding2D(padding=(1,1), input_shape=input_shape))
     model.add(layers.Conv2D(
-        48,
-        kernel_size=(2, 2),
-        activation=relu,
-        input_shape=input_shape
-    ))
-    model.add(layers.Conv2D(
-        96,
-        kernel_size=(2, 2),
-        activation=relu
-    ))
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(layers.Conv2D(
-        144,
+        16,
         kernel_size=(2, 2),
         activation=relu
     ))
     if dropout:
         model.add(layers.Dropout(drop_rate))
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-    model.add(layers.Conv2D(
-        256,
+    model.add(layers.SeparableConv2D(
+        36,
         kernel_size=(2, 2),
-        activation=relu
+        activation=relu,
     ))
-    model.add(layers.Conv2D(
-        512,
+    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
+    model.add(layers.SeparableConv2D(
+        42,
         kernel_size=(2, 2),
         activation=relu
     ))
     if dropout:
         model.add(layers.Dropout(drop_rate))
     model.add(layers.Flatten())
-    model.add(layers.Dense(512, activation=relu))
+    model.add(layers.Dense(768, activation=relu))
+    if dropout:
+        model.add(layers.Dropout(drop_rate))
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
     model.summary()
+    model.compile(
+        optimizer=keras.optimizers.Adam(),
+        loss=keras.losses.categorical_crossentropy,
+        metrics=['accuracy']
+    )
     return model
 
 def create_cifar_100_f_model(dropout, drop_rate):
@@ -201,6 +199,11 @@ def create_cifar_100_f_model(dropout, drop_rate):
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(512, activation=relu))
     model.add(layers.Dense(NUM_CLASSES, activation=tf.nn.softmax))
+    model.compile(
+        optimizer=keras.optimizers.Adam(),
+        loss=keras.losses.categorical_crossentropy,
+        metrics=['accuracy']
+    )
     return model
 
 #=========================<Pipeline Functions>==================================
@@ -232,7 +235,7 @@ def getRawData():
 
 
 
-def preprocessData(raw):
+def preprocessData(raw, random_crops):
     ((xTrain, yTrain), (xTest, yTest)) = raw
     if ALGORITHM != "tf_conv":
         xTrainP = xTrain.reshape((xTrain.shape[0], IS))
@@ -305,7 +308,7 @@ def evalResults(data, preds):
 
 def main():
     raw = getRawData()
-    data = preprocessData(raw)
+    data = preprocessData(raw, RANDOM_CROPS)
     model = trainModel(data[0])
     preds = runModel(data[1][0], model)
     evalResults(data[1], preds)
