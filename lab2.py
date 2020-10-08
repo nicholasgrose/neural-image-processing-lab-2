@@ -120,6 +120,11 @@ def buildTFConvNet(x, y, eps = 10, dropout = True, dropRate = 0.2):
 def create_mnist_f_model(dropout, drop_rate):
     model = keras.models.Sequential()
     input_shape = (IH, IW, IZ)
+    if RANDOM_CROPS:
+        model.add(layers.experimental.preprocessing.RandomCrop(IH, IW, input_shape=input_shape))
+        model.add(layers.ZeroPadding2D(padding=(1,1)))
+    else:
+        model.add(layers.ZeroPadding2D(padding=(1,1), input_shape=input_shape))
     model.add(layers.ZeroPadding2D(padding=(1,1), input_shape=input_shape))
     model.add(layers.Conv2D(
         28,
@@ -159,12 +164,20 @@ def create_mnist_f_model(dropout, drop_rate):
 def create_cifar_100_f_model(dropout, drop_rate):
     model = keras.models.Sequential()
     input_shape = (IH, IW, IZ)
-    model.add(layers.Conv2D(
-        32,
-        kernel_size=(2, 2),
-        activation=relu,
-        input_shape=input_shape
-    ))
+    if RANDOM_CROPS:
+        model.add(layers.experimental.preprocessing.RandomCrop(IH, IW), input_shape=input_shape)
+        model.add(layers.Conv2D(
+            32,
+            kernel_size=(2, 2),
+            activation=relu
+        ))
+    else:
+        model.add(layers.Conv2D(
+            32,
+            kernel_size=(2, 2),
+            activation=relu,
+            input_shape=input_shape
+        ))
     model.add(layers.Conv2D(
         64,
         kernel_size=(2, 2),
