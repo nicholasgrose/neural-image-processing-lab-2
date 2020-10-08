@@ -181,8 +181,7 @@ def create_cifar_100_f_model(dropout, drop_rate):
     model.add(layers.Conv2D(
         64,
         kernel_size=(2, 2),
-        activation=relu,
-        input_shape=input_shape
+        activation=relu
     ))
     model.add(layers.MaxPooling2D(pool_size=(2, 2)))
     model.add(layers.Conv2D(
